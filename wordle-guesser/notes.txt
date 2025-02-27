@@ -1,7 +1,9 @@
 UP TO THU 27 FEB 14.45
 seeeeeee funziona con entropy!! 
 * calcola entropy su tutta la lista subito x liste piu grandi, check come peggiora la perf for dev_wordlist
+* compute deterministically the first word
 * comment out (principlamente su dove cambiare lista)
+* think of new ways to decrease avg guesses
 
 
 
@@ -45,6 +47,12 @@ PERFORMANCES
     Proportion of words guessed correctly: 96.77%
     Average number of guesses: 4.3150 
     Total execution time: 7.80 seconds
+
+    # test set, 500 games (27 feb)
+    Proportion of words guessed correctly: 100.00%
+    Average number of guesses: 2.9720 
+    Total execution time: 0.39 seconds
+
 
 
 '''

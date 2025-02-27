@@ -71,12 +71,22 @@ class Guesser:
             
             return entropy
         
-        def choose_nextguess(self, list):
+        def build_entropydict(self, list):
             entropy_dict={}
             for word in list:
                 entropy_dict[word]= self.compute_entropy(word, list)
-            next_guess =  max(entropy_dict, key=entropy_dict.get)
+            return entropy_dict
+
+        def choose_nextguess(self, list):
+            entropy_dict=self.build_entropydict(self.mylist)
+            mydict = {key: entropy_dict[key] for key in entropy_dict if key in list}
+            next_guess =  max(mydict, key=mydict.get)
             return next_guess
+        
+        def choose_firstguess(self, list):
+            pass #build function to compute the most frequent words in each position (avg guesses per game will decrease!)
+
+        # somewhere call function build_criteriadict to build dict with entropies (calling compute_entropy) and then call choose next guess accordingly below
 
         def get_guess(self, result):
             '''
@@ -94,7 +104,8 @@ class Guesser:
                     self.console.print(guess)
                     self.last_guess = guess  
                     return guess
-                    
+
+                # entropy_dict=self.build_entropydict(self.mylist)    
                 count_letters={}
                 correct=re.findall(r'[a-z]', result)
                 #print('correct letters are:', correct)
