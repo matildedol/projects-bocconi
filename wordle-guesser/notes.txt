@@ -1,3 +1,10 @@
+UP TO THU 27 FEB 14.45
+seeeeeee funziona con entropy!! 
+* calcola entropy su tutta la lista subito x liste piu grandi, check come peggiora la perf for dev_wordlist
+* comment out (principlamente su dove cambiare lista)
+
+
+
 
 UP TO MAR POMERIGGIO:
 funziona per tutto. 
@@ -256,3 +263,268 @@ FUNZIONAAAAAA
         # 10 repeat from 2 until endgame False
 
     '''
+
+CON MISPLACED COME CLASS INSTANCE
+from random import choice
+import yaml
+from rich.console import Console
+import re
+# from collections import Counter
+# from wordle import Wordle
+# from game import Game
+
+
+class Guesser:
+    '''
+        INSTRUCTIONS: This function should return your next guess. 
+        Currently it picks a random word from wordlist and returns that.
+        You will need to parse the output from Wordle:
+        - If your guess contains that character in a different position, Wordle will return a '-' in that position.
+        - If your guess does not contain that character at all, Wordle will return a '+' in that position.
+        - If you guesses the character placement correctly, Wordle will return the character. 
+
+        You CANNOT just get the word from the Wordle class, obviously :)
+    '''
+
+    '''
+        Notes (by Mati):
+        game.GUESSES and game.RESULTS in game.py store the success rates for all the games you play! 
+    '''
+    def __init__(self, manual):
+        self.word_list = yaml.load(open('dev_wordlist.yaml'), Loader=yaml.FullLoader)
+        self._manual = manual
+        self.console = Console()
+        self._tried = []
+        self.misplaced = set()
+        self.last_guess = None
+        self.mylist = None
+
+    def restart_game(self):
+        self._tried = []
+        self.last_guess=None 
+        self.mylist=self.word_list.copy()                                               # restore the initial complete list, last guess, and misplaced list
+        self.misplaced = set()
+
+    def compute_nextletter(self, letter):
+        pass
+        
+        # function to compute the most freq letter after a letter 
+
+    def get_guess(self, result):
+        '''
+        This function must return your guess as a string. 
+        '''
+        if self._manual=='manual':
+            return self.console.input('Your guess:\n')
+        else:
+            '''
+            CHANGE CODE HERE
+            '''
+
+            if not self.last_guess:   
+                guess='mates'
+                self._tried.append(guess)
+                self.console.print(guess)
+                self.last_guess = guess  
+                return guess
+                
+            correct=re.findall(r'[a-z]', result)                                                                    # this is recomputed in each iteration, but not significantly inefficient and logic works (I always keep correct words)
+            count_letters={}
+            print('misplaced letters are:', self.misplaced)
+            print('my last guess is', self.last_guess)
+            for idx, (letter,outcome) in enumerate(zip(self.last_guess, result)):
+                if letter not in count_letters:                                                                     ## count and store parsed letters (could use Counter() but this works efficiently)
+                    count_letters[letter]=1
+                else:
+                    count_letters[letter]+=1
+                    
+                if outcome == '+':                                                                                  ## now filter the list depending on the result
+                    count_letters[letter]-=1                                                                        # decrease count, I don't want it
+                    if letter in correct and letter not in self.misplaced:
+                        self.mylist=[word for word in self.mylist if word.count(letter)==correct.count(letter)]     # for '+' and letter only in correct, keep words that have only the correct num of that letter
+                    elif letter in correct and letter in self.misplaced:                                            # for '+' and letter in correct and in misplaced, ignore (neglegible cost of avg guesses) (1)
+                        pass
+                    else:
+                        self.mylist=[word for word in self.mylist if word.count(letter)==count_letters[letter]]     # for '+' and possibly letter only in misplaced, I use the count of correct occurrences of the letter (addresses '--+' '-+' '+' '++' '+++' equivalently)
+
+                elif outcome == '-':   
+                    self.mylist=[word for word in self.mylist if word[idx]!=letter and letter in word]
+                    self.misplaced.add(letter)
+
+                else:                                                                                               # for 'a', keep only words with that letter in that index 
+                    self.mylist=[word for word in self.mylist if word[idx]==letter]     
+                # print('my list is', self.mylist[:10])
+                #print('my dict is', count_letters,'\n')
+
+            print('parsed letters are:', count_letters)
+
+            guess = choice(self.mylist)
+            self.last_guess = guess
+            self._tried.append(guess)
+            self.console.print(guess)
+            return guess
+        
+'''
+    the problem is I want to call my function with the result and also with my last guess as argument. 
+
+'''
+
+    # def game(self, wordle, guesser):
+    #     endgame = False
+    #     guesses = 0
+    #     result = '+++++'                                        # initializes result at +++++
+    #     while not endgame:
+    #         guess = guesser.get_guess(result)                   # TAKES THE GUESS FROM GUESSER !!                    
+    #         guesses += 1
+    #         result, endgame = wordle.check_guess(guess)
+    #         print(result)                                       # prints the resulting string from wordle.check_guess
+    #     return result, guesses
+
+'''
+    so what I want to do in guesser is: 
+    # 1 start from a random word (for now). 
+    # 2 run check_guess
+    # 3 parse the result from check guess
+    # 4 parse my word
+    # 5 for every - in result, take the corresponding letter and filter list for words that have it
+    # 6 for every + in result, take the corresponding letter and filter list for words that don't have it 
+    # 7 for every a-z in result, filter list with only words that have it in that position
+    # 8 pick another word at random from the filtered list
+    # 9 return it as 'guess' 
+    # 10 repeat from 2 until endgame False
+
+'''
+
+
+
+from random import choice
+import yaml
+from rich.console import Console
+import re
+from collections import Counter
+import math
+# from collections import Counter
+# from wordle import Wordle
+# from game import Game
+
+
+class Guesser:
+        '''
+            INSTRUCTIONS: This function should return your next guess. 
+            Currently it picks a random word from wordlist and returns that.
+            You will need to parse the output from Wordle:
+            - If your guess contains that character in a different position, Wordle will return a '-' in that position.
+            - If your guess does not contain that character at all, Wordle will return a '+' in that position.
+            - If you guesses the character placement correctly, Wordle will return the character. 
+
+            You CANNOT just get the word from the Wordle class, obviously :)
+        '''
+
+        '''
+            Notes (by Mati):
+            game.GUESSES and game.RESULTS in game.py store the success rates for all the games you play! 
+        '''
+        def __init__(self, manual):
+            self.word_list = yaml.load(open('dev_wordlist.yaml'), Loader=yaml.FullLoader)
+            self._manual = manual
+            self.console = Console()
+            self._tried = []
+            self.last_guess = None
+            self.mylist=None
+
+        def restart_game(self):
+            self._tried = []
+            self.last_guess=None 
+            self.mylist=self.word_list.copy()                                       # take the initial complete list
+
+        def compute_entropy(self, word, list):                                            # compute entropy word by word (convenient in a 500 words list, as each word divides set on half and first one is determined)    
+            patterns=[]                                                             # create list of possible patterns
+            for vs_word in list:
+                counts = Counter(vs_word)
+                pattern=[]
+                for i, letter in enumerate(word):
+                    if word[i] == vs_word[i]:
+                        pattern+=word[i]
+                        counts[word[i]]-=1
+                    else:
+                        pattern+='+'
+                for i, letter in enumerate(word):
+                    if word[i] != vs_word[i] and word[i] in vs_word:
+                        if counts[word[i]]>0:
+                            counts[word[i]]-=1
+                            pattern[i]='-'
+                patterns.append(''.join(pattern))
+
+            patterns_freq={}                                                        # create dict with pattern:abs_freq
+            for pattern in patterns:
+                if pattern not in patterns_freq:
+                    patterns_freq[pattern]=1
+                else:
+                    patterns_freq[pattern]+=1
+                
+            entropy = 0
+            tot=len(patterns)
+            for pattern in patterns_freq:
+                p = patterns_freq[pattern]/tot
+                entropy += - (p)*math.log2(p)
+            return entropy
+        
+        def create_entropydict(self, list):
+            entropy_dict={}
+            for word in list:
+                entropy_dict[word]= self.compute_entropy(word, list)
+            return entropy_dict
+        
+        def choose_nextguess(self, list):
+            criteria_dict=self.create_entropydict(list)
+            next_guess =  max(criteria_dict, key=criteria_dict.get)
+            return next_guess
+
+        def get_guess(self, result):
+            '''
+            This function must return your guess as a string. 
+            '''
+            if self._manual=='manual':
+                return self.console.input('Your guess:\n')
+            else:
+                '''
+                CHANGE CODE HERE
+                '''
+                if not self.last_guess:
+                    guess='tanes'
+                    self._tried.append(guess)
+                    self.console.print(guess)
+                    self.last_guess = guess  
+                    return guess
+                    
+                count_letters={}
+                correct=re.findall(r'[a-z]', result)
+                #print('correct letters are:', correct)
+                misplaced=[]                                                                                                # this is restored each time, but ok! cause I only keep words with that letter 
+                for idx, (letter,outcome) in enumerate(zip(self.last_guess, result)):
+
+                    if letter not in count_letters:
+                        count_letters[letter]=1
+                    else:
+                        count_letters[letter]+=1                                                                            # can be done with counter faster
+
+                    if outcome == '+':                                                                                      # then you want to remove all words with that letter
+                        count_letters[letter]-=1
+                        if letter in correct and letter not in misplaced:
+                            self.mylist=[word for word in self.mylist if word.count(letter)==correct.count(letter)]
+                        elif letter in correct and letter in misplaced:
+                            pass
+                        else:
+                            self.mylist=[word for word in self.mylist if word.count(letter)==count_letters[letter]]
+                    elif outcome == '-':
+                        misplaced.append(letter)
+                        self.mylist=[word for word in self.mylist if word[idx]!=letter and letter in word]                  # I don't use the case of double or triple '-', but nvm
+                    else:
+                        self.mylist=[word for word in self.mylist if word[idx]==letter]                                     # here the list gets modified, in each loop, then with a new game we start from the if above and the list goes abck to being the complete one
+                    #print('my list is', self.mylist[:10])
+                    #print('my dict is', count_letters,'\n')
+                guess = self.choose_nextguess(self.mylist)
+                self.last_guess = guess
+                self._tried.append(guess)
+                self.console.print(guess)
+            return guess
