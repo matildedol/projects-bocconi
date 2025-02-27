@@ -1,0 +1,258 @@
+
+UP TO MAR POMERIGGIO:
+funziona per tutto. 
+to do:
+migliorare avg num of guesses (add entropy, then optimize time)
+sistemare la logica nel filtering della lista
+
+UP TO MAR PRANZO:
+funziona! quello in guesser. unica cosa. capire meglio la logica nei count per sistemare ogni casistica tipo jesus 
+event ignora il + quando la lettera è gia correct e misplaced (pochi casi in cui lettera appare 3 volte)
+
+UP TO LUNEDI SERA:
+è un casino! sistemare il codice in modo che funzioni bene per 'tampa' '++++a'. pensaci domani, alla fine di questo doc 
+c'è la funzione che funzionava fino a prima di questo problema.
+
+
+UP TO LUNEDI MATTINA:
+change logic in the filtering of list, problems with syntax
+
+UP TO DOMENICA SERA 23 FEB:
+capire come gestire la logica del primo guess in guesser being random, dopodiche lasciare che ci sia un output,
+prendere il mio guess di prima e l'output e filtrare la mia lista di parole. 
+ora non mi prende il mio guess perché è interno all'if
+
+PERFORMANCES
+    # train set, 50k games (mar 25 feb, codice mio, ignorando correct & - & +)
+    Proportion of words guessed correctly: 96.68%
+    Average number of guesses: 4.3233 
+    Total execution time: 39.12 seconds
+
+    # test set, 500 games
+    Proportion of words guessed correctly: 100.00%
+    Average number of guesses: 3.4680 
+    Total execution time: 0.15 seconds
+
+    # train set, 10k games (26 feb)
+    scores updated, # 10000
+    Proportion of words guessed correctly: 96.77%
+    Average number of guesses: 4.3150 
+    Total execution time: 7.80 seconds
+
+
+'''
+    ragionamento: 
+                # for word in self.word_list:         # iterate list of words and remove each one
+                #     for letter,idx in enumerate(word):
+                #         if letter in not_wanted or (letter in wanted and wanted[letter]==idx) or (letter in correct and correct[letter]!=idx):
+                #             self.word_list.remove(word)
+    - rispetto a iterare 5 volte la mia lista di parole per ogni +|-|a-z, è meglio iterarla una volta e controllare ogni volta le 3 liste
+    forse sono in realtà stessa complessità 
+    ci potrebbero essere dei modi più veloci, in base alle casistiche. pensaci :)
+
+    - ora io parto dalle lettere che ho nella parola. e dico se una lettera che non voglio c'è, elimina, se una lettera che voglio c'è in un altro index, ecc
+    però in realtà io vorrei anche controllare se una lettera he c'è nella mia lista wanted o correct, e non c'è nella parola
+    quindi forse devo fare the other way around: check each letter from the 3 criterias in each word of the list (once a criteria is not met, la elimino, quindi non li checko neanche tutti)
+    perché partire dalla parola sarebbe come complessità più breve in quanto itero la parola 1 sola volta. però devo checkare tutti e 3 e in piu non checko tutto quello che voglio. 
+    quindi alla fine secondo me come efficienza ci perdi. 
+    
+'''
+
+    # def game(self, wordle, guesser):
+    #     endgame = False
+    #     guesses = 0
+    #     result = '+++++'                                        # initializes result at +++++
+    #     while not endgame:
+    #         guess = guesser.get_guess(result)                   # TAKES THE GUESS FROM GUESSER !!                    
+    #         guesses += 1
+    #         result, endgame = wordle.check_guess(guess)
+    #         print(result)                                       # prints the resulting string from wordle.check_guess
+    #     return result, guesses
+
+'''
+    while loop:
+        starts from taking the guess from my function (get_guess)
+        updates num of guesses (to count them and end game after)
+        updates result from check_guess
+        updates the state of the game to check if it ended 
+        prints each time the result to tell the user possible correct letters
+        returns final result and num of guesses (which will be then used for statistics)
+
+    so what I want to do in guesser is: 
+    # 1 start from a random word (for now). 
+    # 2 run check_guess
+    # 3 parse the result from check guess
+    # 4 parse my word
+    # 5 for every - in result, take the corresponding letter and filter list for words that have it
+    # 6 for every + in result, take the corresponding letter and filter list for words that don't have it 
+    # 7 for every a-z in result, filter list with only words that have it in that position
+    # 8 pick another word at random from the filtered list
+    # 9 return it as 'guess' 
+    # 10 repeat from 2 until endgame False
+
+    do not have to do a loop -> already in game!!
+    i will start from initial list
+    set the criteria to filter it (#5,6,7)
+    choose randomly from the filtered list
+    either the result from check_guess is empty so the filter is just empty, or i add an if statement for the first iteration
+
+    to parse words and +|-|a-z sequences i need to iterate a string: 
+        - enumerate() to get also indices
+        - for char in word syntax 
+
+'''
+
+            # not_wanted=[]                       # list of wrong words
+            # wanted={}                           # dictionary with letter:index in which it appears in word (index to be changed)
+            # correct={}                          # dictionary with letter:index in which it appears in word (index to be kept)
+            # for idx,letter in myword:
+            #     if result[idx] == '+':         # then i want to delete all words from self.word_list that have that letter
+            #         not_wanted.append(letter)
+            #     elif result[idx] == '-':
+            #         wanted[letter]=idx
+            #     else:
+            #         correct[letter]=idx
+            # for letter in not_wanted:           # at most 5n, with n=len(word_list)
+            #     for word in self.word_list:
+            #         if letter in word:
+            #             self.word_list.remove(word)
+            # for letter in wanted:               # at most 5n (n - something)
+            #     for word in self.word_list:
+            #         if letter not in word or (letter in wanted and wanted[letter]==idx):
+            #             self.word_list.remove(word)
+            # for letter in correct:              # at most 5n (n - something)
+            #     for word in self.word_list:
+            #         if letter not in word or (letter in correct and correct[letter]!=idx):
+            #             self.word_list.remove(word)
+            #                                         # overall 15 n > linear time, but maybe slow in practice
+
+            # # by claudio
+            # for i, (letter, outcome) in enumerate(zip(self.last_guess, result)):
+            #     if outcome == '+':  # Wrong letter
+            #         self.word_list = [word for word in self.word_list if letter not in word]
+            #     elif outcome == '-':  # Right letter, wrong position
+            #         self.word_list = [word for word in self.word_list if letter in word and word[i] != letter]
+            #     else:  # outcome == '.' - Right letter, right position
+            #         self.word_list = [word for word in self.word_list if word[i] == letter]
+
+from random import choice
+import yaml
+from rich.console import Console
+import re
+# from collections import Counter
+# from wordle import Wordle
+# from game import Game
+
+
+FUNZIONAAAAAA
+
+    class Guesser:
+        '''
+            INSTRUCTIONS: This function should return your next guess. 
+            Currently it picks a random word from wordlist and returns that.
+            You will need to parse the output from Wordle:
+            - If your guess contains that character in a different position, Wordle will return a '-' in that position.
+            - If your guess does not contain that character at all, Wordle will return a '+' in that position.
+            - If you guesses the character placement correctly, Wordle will return the character. 
+
+            You CANNOT just get the word from the Wordle class, obviously :)
+        '''
+
+        '''
+            Notes (by Mati):
+            game.GUESSES and game.RESULTS in game.py store the success rates for all the games you play! 
+        '''
+        def __init__(self, manual):
+            self.word_list = yaml.load(open('dev_wordlist.yaml'), Loader=yaml.FullLoader)
+            self._manual = manual
+            self.console = Console()
+            self._tried = []
+            self.last_guess = None
+            self.mylist=None
+
+        def restart_game(self):
+            self._tried = []
+            self.last_guess=None 
+            self.mylist=self.word_list.copy()                                               # take the initial complete list
+            
+        #def compute_follletter(self, letter):
+            # function to compute the most freq word after a letter 
+        def get_guess(self, result):
+            '''
+            This function must return your guess as a string. 
+            '''
+            if self._manual=='manual':
+                return self.console.input('Your guess:\n')
+            else:
+                '''
+                CHANGE CODE HERE
+                '''
+                if not self.last_guess:
+                    guess='mates'
+                    self._tried.append(guess)
+                    self.console.print(guess)
+                    self.last_guess = guess  
+                    return guess
+                    
+                count_letters={}
+                correct=re.findall(r'[a-z]', result)
+                #print('correct letters are:', correct)
+                misplaced=[]
+                for idx, (letter,outcome) in enumerate(zip(self.last_guess, result)):
+
+                    if letter not in count_letters:
+                        count_letters[letter]=1
+                    else:
+                        count_letters[letter]+=1                # can be done with counter faster
+
+                    if outcome == '+':              # then you want to remove all words with that letter
+                        count_letters[letter]-=1
+                        if letter in correct and letter not in misplaced:
+                            self.mylist=[word for word in self.mylist if word.count(letter)==correct.count(letter)]
+                        elif letter in correct and letter in misplaced:
+                            pass
+                        else:
+                            self.mylist=[word for word in self.mylist if word.count(letter)==count_letters[letter]]
+                    elif outcome == '-':
+                        misplaced.append(letter)
+                        self.mylist=[word for word in self.mylist if word[idx]!=letter and letter in word]
+                    else:
+                        self.mylist=[word for word in self.mylist if word[idx]==letter]       #here the list gets modified, in each loop, then with a new game we start from the if above and the list goes abck to being the complete one
+                    #print('my list is', self.mylist[:10])
+                    #print('my dict is', count_letters,'\n')
+                guess = choice(self.mylist)
+                self.last_guess = guess
+                self._tried.append(guess)
+                self.console.print(guess)
+            return guess
+            
+    '''
+        the problem is I want to call my function with the result and also with my last guess as argument. 
+
+    '''
+
+        # def game(self, wordle, guesser):
+        #     endgame = False
+        #     guesses = 0
+        #     result = '+++++'                                        # initializes result at +++++
+        #     while not endgame:
+        #         guess = guesser.get_guess(result)                   # TAKES THE GUESS FROM GUESSER !!                    
+        #         guesses += 1
+        #         result, endgame = wordle.check_guess(guess)
+        #         print(result)                                       # prints the resulting string from wordle.check_guess
+        #     return result, guesses
+
+    '''
+        so what I want to do in guesser is: 
+        # 1 start from a random word (for now). 
+        # 2 run check_guess
+        # 3 parse the result from check guess
+        # 4 parse my word
+        # 5 for every - in result, take the corresponding letter and filter list for words that have it
+        # 6 for every + in result, take the corresponding letter and filter list for words that don't have it 
+        # 7 for every a-z in result, filter list with only words that have it in that position
+        # 8 pick another word at random from the filtered list
+        # 9 return it as 'guess' 
+        # 10 repeat from 2 until endgame False
+
+    '''
