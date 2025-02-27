@@ -83,8 +83,21 @@ class Guesser:
             next_guess =  max(mydict, key=mydict.get)
             return next_guess
         
-        def choose_firstguess(self, list):
-            pass #build function to compute the most frequent words in each position (avg guesses per game will decrease!)
+        def choose_firstguess(self, list):                                   #build function to compute the most frequent letter in each position (avg guesses per game will decrease!)
+            firstword=[]
+            for i in range(4):
+                mydict={}
+                for word in list:
+                    if word[i] in mydict:
+                        mydict[word[i]]=1
+                    else:
+                        mydict[word[i]]+=1
+                best_letter=max(mydict, key=mydict.get)
+                firstword.append(best_letter)
+            firstguess=''.join(firstword)
+            return firstguess
+        
+
 
         # somewhere call function build_criteriadict to build dict with entropies (calling compute_entropy) and then call choose next guess accordingly below
 
