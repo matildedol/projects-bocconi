@@ -7,3 +7,5 @@ More info on each project is found inside the specific directories.
 
 - **boolean-compiler** is a parser and evaluator for a boolean input file, outputting truth tables. 
 
+- **wordle-guesser** is a guesser for a cousin of the game Wordle, implementing entropy analysis. 
+
