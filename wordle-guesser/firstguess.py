@@ -1,8 +1,12 @@
 import yaml
+'''
+Program to compute the most frequent letter in each position (avg guesses per game will decrease!)
+Could be used for a first deterministic guess
+'''
 
-def choose_firstguess(list):                                   #build function to compute the most frequent letter in each position (avg guesses per game will decrease!)
+def choose_firstguess(list):                                  
     firstword=[]
-    secondword=[]
+    # secondword=[]
     for i in range(5):
         letters_list=[]
         for word in list:
@@ -14,10 +18,11 @@ def choose_firstguess(list):                                   #build function t
         best_letter=max(mydict, key=mydict.get)
         mydict.pop(best_letter)
         firstword.append(best_letter)
-        secondword.append(max(mydict, key=mydict.get))
+        # secondword.append(max(mydict, key=mydict.get))
+
     firstguess=''.join(firstword)
-    secondguess=''.join(secondword)
-    return firstguess, secondguess
+    # secondguess=''.join(secondword)
+    return firstguess
 
 mylist = yaml.load(open('dev_wordlist.yaml'), Loader=yaml.FullLoader)
-print('the best two words are \n', choose_firstguess(mylist))
+print('the best word is \n', choose_firstguess(mylist))
