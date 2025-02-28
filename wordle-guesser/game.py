@@ -24,23 +24,28 @@ class Game:
             result = False
         else:
             result = True
-        self.RESULTS.append(result)                             # checks if I guessed, it will take as input the result of wordle.check_guess
+        # checks if I guessed, it will take as input the result of wordle.check_guess
+        self.RESULTS.append(result)                             
         self.GUESSES.append(guesses)
 
     def game(self, wordle, guesser):
         endgame = False
         guesses = 0
-        result = '+++++'                                       # initializes result at +++++
+        # initializes result at +++++
+        result = '+++++'                                       
         while not endgame:
             print('playing game...')
-            guess = guesser.get_guess(result)                   # TAKES THE GUESS FROM GUESSER !!                    
+            # TAKES THE GUESS FROM GUESSER !!     
+            guess = guesser.get_guess(result)                                  
             print('processing guess...')
             guesses += 1
             result, endgame = wordle.check_guess(guess)
-            print(result)                                       # prints the resulting string from wordle.check_guess
+            # prints the resulting string from wordle.check_guess
+            print(result)                                       
         return result, guesses
 
-def main():                                                     # bla bla setting up stuff... 
+# bla bla setting up stuff... 
+def main():                                                     
     # set up command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--r', type=int, help='number of rounds to play')
@@ -74,7 +79,8 @@ def main():                                                     # bla bla settin
             results, guesses = game.game(wordle, guesser)
 
             # score the game
-            game.score(results, guesses)                        # take the num of guesses counted in game(), use it to count guesses each time
+            # take the num of guesses counted in game(), use it to count guesses each time
+            game.score(results, guesses)
             print('scores updated, #',run+1)
 
         # print('game done!')
