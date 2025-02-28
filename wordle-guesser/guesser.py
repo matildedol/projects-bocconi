@@ -26,7 +26,7 @@ class Guesser:
             game.GUESSES and game.RESULTS in game.py store the success rates for all the games you play! 
         '''
         def __init__(self, manual):
-            self.word_list = yaml.load(open('dev_wordlist.yaml'), Loader=yaml.FullLoader)
+            self.word_list = yaml.load(open('chat_sample.yaml'), Loader=yaml.FullLoader)
             self._manual = manual
             self.console = Console()
             self._tried = []
@@ -78,9 +78,8 @@ class Guesser:
             return entropy_dict
 
         def choose_nextguess(self, list):
-            entropy_dict=self.build_entropydict(self.mylist)
-            mydict = {key: entropy_dict[key] for key in entropy_dict if key in list}
-            next_guess =  max(mydict, key=mydict.get)
+            entropy_dict=self.build_entropydict(list)
+            next_guess =  max(entropy_dict, key=entropy_dict.get)
             return next_guess
         
         def choose_firstguess(self, list):                                   #build function to compute the most frequent letter in each position (avg guesses per game will decrease!)
