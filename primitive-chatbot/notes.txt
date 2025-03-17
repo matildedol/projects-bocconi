@@ -1,0 +1,55 @@
+# work in progress XD 
+    sera lunedi 17 mar:
+    mi dice size mismatch forse nel fare il dot product, mi sa perche devo calcolare i vector representation sullo stesso vocabulary ! non su due diversi
+
+
+# code:
+
+    0. preprocessing 
+    importare files
+    isolare le domande
+    tagliare eventuali quotes alla fine e spazi
+
+    1. represent questions (where track 1, 2 and 3 differ) 
+        > access csv files and parse questions (dai notebook vedo come fare)
+        > scegliere un modo di rappresentarle 
+            > provarle tutte? quelle che dice e vedere quale performa meglio 
+        > implementarlo nel train_prompts, dev_prompts e poi test_prompts
+
+        # track 1
+            secondo me hanno senso ngrams oppure count vectorizer. proviamo con count vectorizer. 
+            > quello che farò è seguire come viene fatto di solito, cioè creare una matrice in cui ogni row è una frase, ogni colonna una coppia di lemmi 
+            lemma_head (costruite con dependency parsing da spacy) e le entrate sono la frequenza della coppia nella frase
+            di conseguenza, ogni frase (prompt) è un vettore (mega sparse) di frequencies > posso fare cosine similarity
+            (note: uso CountVectorizer() di sklearn, stessa cosa si può fare con n-grams, solo parole, etc.)
+            potenzialmente potrei considerare relative frequencies tipp TF-IDF
+        
+
+    2. for each (represntation of) question (a) in test_prompts, find most similar question in dev_prompts and train_prompts (b)
+        > scegliere similarity metrics e implementarla
+        > possibly, pensare a ottimizzare running through list (ma running time should not be a problem)
+
+        # i want to add to my df a column with representation of that prompt. then,
+            for each prompt in test set: i compute cosine similarity, store it in a dictionary with id of conversation as key and cos sim as value, 
+            then return the key of the highest value and retrieve the corresponding answer from df 
+            > add all of this to my csv dataset
+
+
+    3. return the answer to question (b) 
+        > creare csv file con le risposte e domande 
+
+
+# notes from class 17 mar
+    idea is to reduce noise in input questions withouth losing signal (to improve accuracy)
+
+    0.12 - 0.15 (non ho capito che valori di riferimento siano, se del BLUE)
+
+    for the 2nd task: confused representation (?)
+
+    contextualized representations are not necessarily better. on average. there is not a huge improvement
+    in BLUR for continuous representations instead of discrete 
+    BLUR of  0.1,0.2
+
+
+# questions :)
+    what's the difference between dev and train?...... 
