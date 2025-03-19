@@ -23,6 +23,10 @@
             di conseguenza, ogni frase (prompt) è un vettore (mega sparse) di frequencies > posso fare cosine similarity
             (note: uso CountVectorizer() di sklearn, stessa cosa si può fare con n-grams, solo parole, etc.)
             potenzialmente potrei considerare relative frequencies tipp TF-IDF
+
+            count vectorizer: the idea is to convert each sentence in a sequence of pairs lemma_head, separated by space, then I count their occurence as "words" 
+            (default in count vectorizer) and each sentence remains separated! 
+            so what I want to 
         
 
     2. for each (represntation of) question (a) in test_prompts, find most similar question in dev_prompts and train_prompts (b)
@@ -53,3 +57,108 @@
 
 # questions :)
     what's the difference between dev and train?...... 
+    come vocabulary uso solo quello del train si?
+
+
+train_df=pd.read_csv('train_responses.csv')
+test_df=pd.read_csv('dev_responses.csv')
+
+def get_discrete_rep(df, vocab):
+    prompts = df['user_prompt'].to_list()
+    parsed_doc = [' '.join('{}_{}'.format(token.lemma_, token.head.lemma_) for token in nlp(sent)) for sent in prompts]       # format sentences as bigrams lemma_head
+    # print(features[:20])
+    vectorizer=CountVectorizer( vocabulary=vocab)                                                                           # use vectorizer to count occurrencies of 'lemma_head' words in our sentences 
+    X = vectorizer.fit_transform(parsed_doc)                                                                                  # create matrix: each row is a prompt, each column a couple lemma_head, entries are frequencies
+    reps_list=[row for row in X]
+    return reps_list
+
+def visualize_representation(df):
+    X_array=X.toarray()                                                                                                     # auxiliary function to visualize df
+    print(X[:4])
+    feature_names = vectorizer.get_feature_names_out()
+    df_features = pd.DataFrame(X_array, columns=feature_names, index=prompts[:len(X_array)])
+    print(df_features)
+
+def get_bestmatch(queries, keys, metric):                                 # è per forza O(n^2) !! come farlo piu efficiente?
+    best_matches=[]
+    for query in queries:
+        for key in keys:
+            best_cos_sim=0
+            cos_sim=metric(query, key)               
+            if cos_sim>best_cos_sim:
+                best_cos_sim=cos_sim
+                best_prompt=key                                 
+        best_matches.append(best_prompt)
+    return best_matches                                         # list of best matches orderd as queries list
+
+def compute_cosinesim(query,key):
+    cos_sim = np.dot(query,key) / (np.linalg.norm(query)*np.linalg.norm(key))
+    return cos_sim
+
+def get_results(queries_df, keys_df):
+    my_vocabulary=build_vocabulary(keys_df)
+    train_reps=get_discrete_rep(keys_df, my_vocabulary)
+    test_reps=get_discrete_rep(queries_df, my_vocabulary)
+    matches=get_bestmatch(test_reps, train_reps)
+    queries_df['best_matches']=matches
+    return queries_df
+
+print(get_results(test_df, train_df).head())
+
+# we build a vocabulary with dependency-based word bigrams 'lemma_head'
+# def build_vocabulary(corpus):                                                                                                    
+#     corpus_list=corpus['user_prompt'].to_list()
+#     vocabulary = set(['{}_{}'.format(token.lemma_, token.head.lemma_) for doc in corpus_list for token in nlp(doc)])             # in our case, docs are prompts
+#     return vocabulary
+
+# # function to get the representation of each prompt in a dataframe with CountVectorizer (and add it to df)
+# def get_representation(df, vocab):
+#     prompts = df['user_prompt'].to_list()
+#     parsed_doc = [' '.join('{}_{}'.format(token.lemma_, token.head.lemma_) for token in nlp(sent)) for sent in prompts]       # format sentences as bigrams lemma_head
+#     # print(features[:20])
+#     vectorizer=CountVectorizer( vocabulary=vocab)                                                                           # use vectorizer to count occurrencies of 'lemma_head' words in our sentences 
+#     X = vectorizer.fit_transform(parsed_doc)                                                                                  # create matrix: each row is a prompt, each column a couple lemma_head, entries are frequencies
+
+#     X_array=X.toarray()                                                                                                     # visualize it
+#     # print(X[:4])
+#     feature_names = vectorizer.get_feature_names_out()
+#     df_features = pd.DataFrame(X_array, columns=feature_names, index=prompts[:len(X_array)])
+#     # print(df_features)
+
+#     prompt_representation = [row for row in X]                                                                              # store representation in df
+#     df['vector_representations'] = prompt_representation
+#     return df
+
+# # function to get cosine similarity between a vector query and n other vectors (keys)
+# def compute_cosinesim(query,key):
+#     cos_sim = np.dot(query,key) / (np.linalg.norm(query)*np.linalg.norm(key))
+#     return cos_sim
+
+# # function to compute similarit between a query and all keys, and retunr the most similar
+# def get_bestmatch(queries_df, keys_df):                                 # è per forza O(n^2) !! come farlo piu efficiente?
+#     best_matches=[]
+#     best_matches_id=[]
+#     for query in queries_df.itertuples():
+#         for key in keys_df.itertuples():
+#             best_cos_sim=0
+#             cos_sim=compute_cosinesim(query[-1], key[-1])               # questi so che sono gli ultimi perche li ho messi io
+#             if cos_sim>best_cos_sim:
+#                 best_cos_sim=cos_sim
+#                 best_prompt=key[2]                                      # qui imbroglio un po' eheh
+#                 best_prompt_id=key[0] 
+#         best_matches.append(best_prompt)
+#         best_matches_id.append(best_prompt_id)
+#     queries_df['best_match']=best_matches
+#     queries_df['best_match_id']=best_matches_id
+#     return queries_df
+
+
+
+# train_df=pd.read_csv('train_responses.csv')
+# test_df=pd.read_csv('dev_responses.csv')
+# my_vocabulary=build_vocabulary(train_df)
+# train_df_wrep=get_representation(train_df, my_vocabulary)
+# test_df_wrep=get_representation(test_df, my_vocabulary)
+
+# result=get_bestmatch(test_df_wrep, train_df_wrep)
+# print(result.head())
