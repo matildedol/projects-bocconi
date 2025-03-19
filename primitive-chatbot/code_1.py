@@ -6,6 +6,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 import sys
 import time
 import datetime
+from scipy.sparse import vstack
+
 
 nlp = spacy.load("en_core_web_sm")   #https://spacy.io/usage/models, multi-language, chosen for accuracy
 
@@ -40,24 +42,15 @@ def get_discrete_rep(corpus, vocab, visualize):
 
     return reps_list
 
-def get_bestmatch(queries, keys, metric):                                 # è per forza O(n^2) !! come farlo piu efficiente?
-    best_matches=[]
-    count_q=0
-    print('there are',len(queries),'queries to be parsed!')
-    for query in queries:
-        start_time_q=time.time()
-        for key in keys:
-            best_cos_sim=0
-            cos_sim=metric(query, key)               
-            if cos_sim>best_cos_sim:
-                best_cos_sim=cos_sim
-                best_prompt=key 
-        if count_q%500==0:
-            q_time=time.time()-start_time_q
-            print('start with queries thousand #', count_q,f'time: {q_time:.2f} s\n',count_q*500, 'queries parsed,', len(queries)-count_q*500,'to go!')
-        count_q+=1 
-        best_matches.append(best_prompt)
-    return best_matches                                         # list of best matches orderd as queries list
+def get_bestmatch(queries, keys, metric=cosine_similarity):    
+    queries_matrix = vstack(queries)
+    keys_matrix = vstack(keys)
+    print('building similarity matrix...')
+    similarity_matrix = metric(queries_matrix, keys_matrix)
+    print('retrieving best matches...')
+    best_match_indices = similarity_matrix.argmax(axis=1)
+    
+    return [keys[i] for i in best_match_indices]                                  # list of best matches orderd as queries list
 
 # def compute_cosinesim(query,key):
 #     cos_sim = np.dot(query,key) / (np.linalg.norm(query)*np.linalg.norm(key))
@@ -85,7 +78,7 @@ def get_results(queries_df, keys_df):
     return queries_df, end_time
 
 
-results, run_time =get_results(test_df, train_df)
+results, run_time = get_results(test_df, train_df)
 
 print(f'Running time: {run_time:.2f}\nResults:', results.head())
 
