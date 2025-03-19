@@ -130,17 +130,31 @@ def get_results(queries_df, keys_df, use_cache=True):
     end_time=time.time() - start_time
     return queries_df, end_time
 
-
-# compute BLEU score to assess performance
-# def compute_BLEU(data):
-#     smoothingfunction = SmoothingFunction() # if you want to know more about smoothing functions: https://aclanthology.org/W14-3346.pdf
-#     if data[data['model_response'].isna() | data['retrieved_response'].isna()]:
-#         print('NaNs values found!')
-#     data['bleu_score'] = data.apply(lambda x: sentence_bleu([x['model_response'].split()], x['retrieved_response'].split(), weights=(0.5, 0.5, 0, 0), smoothing_function=smoothingfunction.method3), axis=1)
-#     end_time=time.time() - start_time
-#     return data, end_time
+#compute BLEU score to assess performance
+def compute_BLEU(data):
+    smoothingfunction = SmoothingFunction()
+    
+    # Check for non-string values and convert them to strings or handle them appropriately
+    if data[data['model_response'].isna() | data['retrieved_response'].isna()].shape[0] > 0:
+        print('NaNs values found!')
+    
+    def safe_bleu(row):
+        try:
+            # Convert to string first in case values are floats
+            model_tokens = str(row['model_response']).split()
+            retrieved_tokens = str(row['retrieved_response']).split()
+            return sentence_bleu([model_tokens], retrieved_tokens, 
+                               weights=(0.5, 0.5, 0, 0), 
+                               smoothing_function=smoothingfunction.method3)
+        except Exception as e:
+            print(f"Error calculating BLEU for row: {row.name}, Error: {e}")
+            return 0.0  # Return a default value or handle as appropriate
+    
+    data['bleu_score'] = data.apply(safe_bleu, axis=1)
+    end_time = time.time() - start_time
+    return data, end_time
 
 
 results,run_time=get_results(test_df, train_df)
-#evaluation, run_time = compute_BLEU(results)
-print(f'Running time: {run_time:.2f}\nResults:', results.head())
+evaluation, run_time = compute_BLEU(results)
+print(f'Running time: {run_time:.2f}\nResults:', evaluation.head(20))
