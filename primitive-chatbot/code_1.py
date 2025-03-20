@@ -157,4 +157,7 @@ def compute_BLEU(data):
 
 results,run_time=get_results(test_df, train_df)
 evaluation, run_time = compute_BLEU(results)
-print(f'Running time: {run_time:.2f}\nResults:', evaluation.head(20))
+bleu_list=evaluation['bleu_score'].to_list()
+avg_BLEU=np.sum(i for i in bleu_list)/len(bleu_list)
+print(f'Running time: {run_time:.2f}\nResults:', evaluation.head())
+print('\nAverage BLEU score:', avg_BLEU )
