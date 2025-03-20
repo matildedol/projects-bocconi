@@ -13,8 +13,6 @@ from nltk.translate.bleu_score import sentence_bleu
 from nltk.translate.bleu_score import SmoothingFunction
 '''
 should i use a class?? bo! 
-
-i should add history! (?) think about it :) 
 '''
 
 nlp = spacy.load("en_core_web_sm")   #https://spacy.io/usage/models, multi-language, chosen for accuracy
@@ -46,25 +44,8 @@ def build_vocabulary(corpus, cache_file='vocabulary_cache.pkl'):
     
     return vocabulary
 
-def get_discrete_rep(corpus, vocab, visualize):
-    parsed_docs = [' '.join('{}_{}'.format(token.lemma_, token.head.lemma_) for token in nlp(doc)) for doc in corpus]       # format sentences as bigrams lemma_head
-    # print(parsed_docs[:20])
-    vectorizer=CountVectorizer( vocabulary=vocab)                                                                           # use vectorizer to count occurrencies of 'lemma_head' words in our sentences 
-    X = vectorizer.fit_transform(parsed_docs)                                                                                  # create matrix: each row is a prompt, each column a couple lemma_head, entries are frequencies
-    reps_list=[row for row in X]                                                                                            # this is a 1xnum(docs) sparse matrix
-    if reps_list[0].shape[1]!=len(vocab):                                                                                   # dim of these vectors is len(vocabulary), their number is len(parsed_docs) which differs from train to test
-        sys.exit('error: dim of representation vectors is not equal to the length of vocabulary')
-    if len(reps_list)!=len(parsed_docs):
-        sys.exit('error: number of representation vectors is not equal to the num of docs')
-
-    if visualize=='y':
-        X_array=X.toarray()                                                                                                     # auxiliary function to visualize df
-        print(X[:4])
-        feature_names = vectorizer.get_feature_names_out()
-        df_features = pd.DataFrame(X_array, columns=feature_names, index=parsed_docs[:len(X_array)])
-        print(df_features)
-
-    return reps_list
+def get_continuous_rep(corpus, vocab, visualize):
+    pass
 
 def get_bestmatch(queries, keys, keys_df, metric=cosine_similarity):    
     queries_matrix = vstack(queries)
@@ -131,10 +112,10 @@ def compute_BLEU(data):
     return data, end_time
 
 
-discrete_results,discrete_run_time=get_results(test_df, train_df, get_discrete_rep)
-evaluation, discrete_run_time = compute_BLEU(discrete_results)
+cont_results,cont_run_time=get_results(test_df, train_df, get_cont_rep)
+evaluation, cont_run_time = compute_BLEU(cont_results)
 bleu_list=evaluation['bleu_score'].to_list()
 avg_BLEU=np.sum(i for i in bleu_list)/len(bleu_list)
-print(f'DISCRETE CASE, TASK 1:\nRunning time: {discrete_run_time:.2f}\nResults:', evaluation.head())
-print('\nAverage BLEU score (task 1):', avg_BLEU )
+print(f'CONTINUOUS CASE, TASK 2:\nRunning time: {cont_run_time:.2f}\nResults:', evaluation.head())
+print('\nAverage BLEU score (task 2):', avg_BLEU )
 
