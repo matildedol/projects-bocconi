@@ -29,10 +29,9 @@ test_df=pd.read_csv('dev_responses.csv')
 
 def get_discrete_rep(corpus, ref_corpus, visualize):
     vectorizer=TfidfVectorizer(analyzer='char', ngram_range=(2,5), sublinear_tf=True)                                                                           
-    vocab = vectorizer.fit(ref_corpus)                                                                                      # fit vectorizer to train data to get vocabulary
+    vectorizer.fit(ref_corpus)                                                                                              # fit vectorizer to train data to get vocabulary
     X= vectorizer.transform(corpus)                                                                                         # create matrix: each row is a prompt, each column an ngram, entries are frequencies
     reps_list=[row for row in X]                                                                                            # this is a 1xnum(docs) sparse matrix
-    
 
     if visualize=='y':
         X_array=X.toarray()                                                                                                     # auxiliary function to visualize df
@@ -52,7 +51,7 @@ def get_bestmatch(queries, keys, keys_df, metric=cosine_similarity):
     best_match_indices = similarity_matrix.argmax(axis=1)    
     return [keys_df.iloc[i]['model_response'] for i in best_match_indices]                                 
 
-def get_results(queries_df, keys_df, get_rep, use_cache=True):
+def get_results(queries_df, keys_df, get_rep):
     print("let's start!\n")
     keys_prompts = keys_df['user_prompt'].to_list()
     queries_prompts = queries_df['user_prompt'].to_list()
