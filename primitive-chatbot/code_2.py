@@ -15,6 +15,8 @@ import fasttext
 from gensim.models import KeyedVectors
 import functools
 import hashlib
+from gensim.models import KeyedVectors
+
 nlp = spacy.load("en_core_web_sm")   #https://spacy.io/usage/models, multi-language, chosen for accuracy
 
 start_time=time.time()
@@ -24,12 +26,11 @@ train_df=pd.read_csv('data/train_responses.csv')
 test_df=pd.read_csv('data/dev_responses.csv')
 
 class ContinuousRep:
-    def __init__(self, train_df, test_df, model_en_path, model_es_path, model_po_path, cache_dir='model_cache'):
-        self.train_df = train_df
-        self.test_df = test_df
-        self.model_en_path = model_en_path
-        self.model_es_path = model_es_path
-        self.model_po_path = model_po_path
+    def __init__(self, keys_df, queries_df, model_path, cache_dir='model_cache'):
+        self.keys_df = keys_df
+        self.queries_df = queries_df
+        self.model_path = model_path
+
         self.cache_dir = cache_dir
         
         # Create cache directory if it doesn't exist
@@ -37,9 +38,8 @@ class ContinuousRep:
         
         print('loading models...')
         # Cached model loading
-        self.model_en = self._load_cached_model(self.model_en_path, 'en')
-        self.model_es = self._load_cached_model(self.model_es_path, 'es')
-        self.model_po = self._load_cached_model(self.model_po_path, 'po')
+        self.model = self._load_cached_model(self.model_path, 'global')
+
 
         # Memoization cache for word embeddings
         self.embedding_cache = {}
@@ -76,18 +76,14 @@ class ContinuousRep:
         if word in self.embedding_cache:
             return self.embedding_cache[word]
         
-        # Try different models
-        models = [self.model_en, self.model_es, self.model_po]
-        for model in models:
-            try:
-                embedding = model[word.lower()]
+        try:
+                embedding = self.model[word.lower()]
                 self.embedding_cache[word] = embedding
                 return embedding
-            except KeyError:
-                continue
+        except KeyError:
+            return np.zeros(self.model[0].vector_size)
         
-        # Return zero vector if word not found
-        return np.zeros(models[0].vector_size)
+        
 
     def get_continuous_rep(self, corpus):
         """
@@ -148,13 +144,9 @@ class ContinuousRep:
 
     def get_results(self, get_rep):
         print("let's start!\n")
-        keys_prompts = self.train_df['user_prompt'].to_list()
-        queries_prompts = self.test_df['user_prompt'].to_list()
-        
-        # Set keys and queries dataframes
-        self.keys_df = self.train_df
-        self.queries_df = self.test_df
-        
+        keys_prompts = self.keys_df['user_prompt'].to_list()
+        queries_prompts = self.queries_df['user_prompt'].to_list()
+
         print('Computing representations...\n')
         
         # Cached representations
@@ -200,13 +192,7 @@ class ContinuousRep:
         return data, end_time
 
 def main():
-    get_responses = ContinuousRep(
-        train_df, 
-        test_df, 
-        'fasttext_models/cc.en.300.vec.gz', 
-        'fasttext_models/cc.es.300.vec.gz',
-        'fasttext_models/cc.pt.300.vec.gz'
-    )
+    get_responses = ContinuousRep(train_df, test_df,'crawl-300d-2M.vec')
     cont_results, cont_run_time = get_responses.get_results(get_responses.get_continuous_rep)
     evaluation, cont_run_time = get_responses.compute_BLEU(cont_results)
     bleu_list = evaluation['bleu_score'].to_list()
