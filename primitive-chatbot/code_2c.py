@@ -13,9 +13,6 @@ from nltk.translate.bleu_score import sentence_bleu
 from nltk.translate.bleu_score import SmoothingFunction
 import gensim.downloader as api
 
-'''
-Using continuous representation with word2vec instead of discrete counts
-'''
 
 nlp = spacy.load("en_core_web_sm")   #https://spacy.io/usage/models, multi-language, chosen for accuracy
 

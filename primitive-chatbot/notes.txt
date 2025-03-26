@@ -1,3 +1,8 @@
+# things to check
+io uso 2 e 5 come parametri di default :) should add motivation???? bo!
+
+
+
 # work in progress XD 
     sera lunedi 17 mar:
     mi dice size mismatch forse nel fare il dot product, mi sa perche devo calcolare i vector representation sullo stesso vocabulary ! non su due diversi
