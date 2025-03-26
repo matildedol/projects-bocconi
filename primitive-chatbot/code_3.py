@@ -14,8 +14,8 @@ nlp = spacy.load("en_core_web_sm")   #https://spacy.io/usage/models, multi-langu
 start_time=time.time()
 now=datetime.datetime.now()
 print('starting time:', now)
-train_df=pd.read_csv('train_responses.csv')
-test_df=pd.read_csv('dev_responses.csv')
+train_df=pd.read_csv('data/train_responses.csv')
+test_df=pd.read_csv('data/dev_responses.csv')
 
 class Track3:
     def __init__(self, keys_df, queries_df, model):
