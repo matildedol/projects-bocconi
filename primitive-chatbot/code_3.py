@@ -6,9 +6,10 @@ import datetime
 import pandas as pd
 import spacy
 import numpy as np
-
-# 1. Load a pretrained Sentence Transformer model
-
+'''
+runs in aorund 24 s
+Average BLEU score (task 3): 0.10233936335610455
+'''
 nlp = spacy.load("en_core_web_sm")   #https://spacy.io/usage/models, multi-language, chosen for accuracy
 
 start_time=time.time()
@@ -30,11 +31,7 @@ class Track3:
     def compute_similarity(self, queries, keys):
         cos_sim_matrix = util.cos_sim(queries, keys)
         return cos_sim_matrix
-    
-    # def get_bestmatches(self, sim_matrix):
-    #     for query in sim_matrix:
-    #         best_match_indices = query.argmax()    
-    #     return [self.keys_df.iloc[i]['model_response'] for i in best_match_indices]      
+        
     def get_bestmatches(self, sim_matrix):
         best_match_indices = [query.argmax().item() for query in sim_matrix]
         return [self.keys_df.iloc[i]['model_response'] for i in best_match_indices]
