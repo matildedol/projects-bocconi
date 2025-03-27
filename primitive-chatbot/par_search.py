@@ -1,9 +1,7 @@
-import spacy
 import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import time
-import datetime
 from scipy.sparse import vstack
 from nltk.translate.bleu_score import sentence_bleu
 from nltk.translate.bleu_score import SmoothingFunction
@@ -100,10 +98,3 @@ def grid_search_tfidf(train_df, test_df, ngram_ranges=None):
 
 # Run grid search
 grid_search_results = grid_search_tfidf(train_df, test_df)
-
-# Save results to CSV
-grid_search_results.to_csv('tfidf_grid_search_results.csv', index=False)
-
-# Print and display top results
-print("\nGrid Search Results (sorted by BLEU score):")
-print(grid_search_results)
