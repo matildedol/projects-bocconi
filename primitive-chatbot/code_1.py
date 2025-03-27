@@ -11,6 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 '''
 runs in around 8 s
+Average BLEU score (task 1): 0.09064968816651113
 '''
 
 nlp = spacy.load("en_core_web_sm")   #https://spacy.io/usage/models, multi-language, chosen for accuracy
@@ -23,7 +24,7 @@ test_df=pd.read_csv('data/dev_responses.csv')
 
 
 def get_discrete_rep(corpus, ref_corpus, visualize):
-    vectorizer=TfidfVectorizer(analyzer='char', ngram_range=(2,5), sublinear_tf=True)                                                                           
+    vectorizer=TfidfVectorizer(analyzer='char', ngram_range=(1,4), sublinear_tf=True)                                                                           
     vectorizer.fit(ref_corpus)                                                                                              # fit vectorizer to train data to get vocabulary
     X= vectorizer.transform(corpus)                                                                                         # create matrix: each row is a prompt, each column an ngram, entries are frequencies
     reps_list=[row for row in X]                                                                                            # this is a 1xnum(docs) sparse matrix
