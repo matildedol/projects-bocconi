@@ -1,21 +1,16 @@
 import spacy
 import pandas as pd
 import numpy as np
-from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import sys
 import time
 import datetime
 from scipy.sparse import vstack
-import pickle
-import os
 from nltk.translate.bleu_score import sentence_bleu
 from nltk.translate.bleu_score import SmoothingFunction
 from sklearn.feature_extraction.text import TfidfVectorizer
-'''
-should i use a class?? bo! 
 
-i should add history! (?) think about it :) 
+'''
+runs in around 8 s
 '''
 
 nlp = spacy.load("en_core_web_sm")   #https://spacy.io/usage/models, multi-language, chosen for accuracy
