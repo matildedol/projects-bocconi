@@ -15,15 +15,16 @@ import fasttext
 from gensim.models import KeyedVectors
 import functools
 import hashlib
-from gensim.models import KeyedVectors
 
 nlp = spacy.load("en_core_web_sm")   #https://spacy.io/usage/models, multi-language, chosen for accuracy
 
 start_time=time.time()
 now=datetime.datetime.now()
 print('starting time:', now)
+
 train_df=pd.read_csv('data/train_responses.csv')
 test_df=pd.read_csv('data/dev_responses.csv')
+model='crawl-300d-2M.vec'
 
 class ContinuousRep:
     def __init__(self, keys_df, queries_df, model_path, cache_dir='model_cache'):
@@ -68,79 +69,53 @@ class ContinuousRep:
         return model
 
     @functools.lru_cache(maxsize=10000)
-    def get_word_embedding(self, word):
-        """
-        Cached word embedding retrieval with LRU caching
-        """
-        # Check if already in cache
-        if word in self.embedding_cache:
-            return self.embedding_cache[word]
-        
-        try:
-                embedding = self.model[word.lower()]
-                self.embedding_cache[word] = embedding
-                return embedding
-        except KeyError:
-            return np.zeros(self.model[0].vector_size)
-        
-        
 
-    def get_continuous_rep(self, corpus):
+    def get_word_embedding(self, word):
+        try:
+            return model[word.lower()]
+        except KeyError:
+            return np.zeros(self.model.vector_size)
+
+    def get_continuous_rep(self, corpus, cache_path='cached_model.pkl'):
         """
-        Cached continuous representation generation
-        Uses memoization to avoid recomputing representations
+        Cached continuous representation generation with new representation method
         """
-        # Create a hash of the corpus to use as a cache key
-        corpus_hash = hashlib.md5(''.join(corpus).encode()).hexdigest()
-        cache_path = os.path.join(self.cache_dir, f'rep_cache_{corpus_hash}.pkl')
-        
-        # Check if cached representation exists
         if os.path.exists(cache_path):
             print('Loading cached representations...')
             with open(cache_path, 'rb') as f:
                 return pickle.load(f)
         
-        # Generate representations
         reps = []
         for sentence in corpus:
-            words = sentence.lower().split()
+            words = sentence.split()
             word_embeddings = [self.get_word_embedding(word) for word in words]
             sentence_rep = np.mean(word_embeddings, axis=0)
             reps.append(sentence_rep)
         
-        # Cache the representations
+        # Cache the new representations
         with open(cache_path, 'wb') as f:
             pickle.dump(reps, f)
-        
+            
         return reps
 
     def get_bestmatch(self, queries, keys, metric=cosine_similarity):
-        """
-        Cached best match retrieval with optional caching of similarity matrix
-        """
-        cache_path = os.path.join(self.cache_dir, 'similarity_matrix_cache.pkl')
         
-        # Convert numpy arrays to sparse matrices for vstack
-        queries_matrix = vstack([csr_matrix(query.reshape(1, -1)) for query in queries])
-        keys_matrix = vstack([csr_matrix(key.reshape(1, -1)) for key in keys])
+        # Option 1: Top-K matches instead of single best match
+        top_k = 3
+        similarity_matrix = metric(queries, keys)
         
-        # Check if cached similarity matrix exists
-        if os.path.exists(cache_path):
-            print('Loading cached similarity matrix...')
-            with open(cache_path, 'rb') as f:
-                similarity_matrix = pickle.load(f)
-        else:
-            # Compute and cache similarity matrix
-            print('Building similarity matrix...')
-            similarity_matrix = metric(queries_matrix, keys_matrix)
-            
-            # Save to cache
-            with open(cache_path, 'wb') as f:
-                pickle.dump(similarity_matrix, f)
+        # Get top-K indices for each query
+        top_k_indices = np.argsort(similarity_matrix, axis=1)[:, -top_k:]
         
-        print('Retrieving best matches...')
-        best_match_indices = similarity_matrix.argmax(axis=1)    
-        return [self.keys_df.iloc[i]['model_response'] for i in best_match_indices]
+        # Aggregate or vote-based matching
+        best_matches = []
+        for indices in top_k_indices:
+            candidate_responses = [self.keys_df.iloc[i]['model_response'] for i in indices]
+            # Use voting or more sophisticated aggregation
+            best_match = max(set(candidate_responses), key=candidate_responses.count)
+            best_matches.append(best_match)
+        
+        return best_matches
 
     def get_results(self, get_rep):
         print("let's start!\n")
@@ -148,13 +123,11 @@ class ContinuousRep:
         queries_prompts = self.queries_df['user_prompt'].to_list()
 
         print('Computing representations...\n')
-        
         # Cached representations
         train_reps = get_rep(keys_prompts)
         self.keys_df['vector_reps'] = train_reps
         train_time = time.time() - start_time
         print(f'\nTraining set representations: done! Time: {train_time:.2f} s\n')
-        
         test_reps = get_rep(queries_prompts)
         test_time = time.time() - train_time
         print(f'Test set representations: done! Time: {test_time:.2f} s\n')
@@ -192,7 +165,7 @@ class ContinuousRep:
         return data, end_time
 
 def main():
-    get_responses = ContinuousRep(train_df, test_df,'crawl-300d-2M.vec')
+    get_responses = ContinuousRep(train_df, test_df,model)
     cont_results, cont_run_time = get_responses.get_results(get_responses.get_continuous_rep)
     evaluation, cont_run_time = get_responses.compute_BLEU(cont_results)
     bleu_list = evaluation['bleu_score'].to_list()
