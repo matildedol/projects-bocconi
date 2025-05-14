@@ -9,3 +9,4 @@ More info on each project is found inside the specific directories.
 
 - **wordle-guesser** is a guesser for a cousin of the game Wordle, implementing entropy analysis. 
 
+- **primitive-chatbot** is an exercise on text similarity creating a primitive version of a chatbot. 
