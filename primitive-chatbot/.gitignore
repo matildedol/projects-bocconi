@@ -1,0 +1,6 @@
+# Python-related
+__pycache__/
+
+# venv
+chatbot_venv/
+node_modules/

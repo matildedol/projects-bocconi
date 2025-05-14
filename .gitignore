@@ -1,0 +1,15 @@
+**/data/**
+*.csv
+*.tsv
+*.json
+*.yaml
+
+*.ipynb
+
+**/notes.txt
+
+*_venv/
+*_venv
+venv/
+
+.DS_Store

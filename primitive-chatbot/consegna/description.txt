@@ -1,0 +1,22 @@
+## Language Technology Assignemnt 2: Primitive Chatbot
+
+# Description of methodology:
+
+# Track 1
+code/code_1.py
+As a discrete representation, I used a TF-IDF score on character ngrams including from 1 to 4 characters per ngram. Then, each sentence is represneted as a vector of TF-IDF scores for each word in the vocabulary, and the vocabulary is computed from the training set. Then test prompts scores are computed depending on that vocabulary. Cosine similarity s used as a measure of similarity between prompts representations, to get for each test prompt the most similar one in the training set, and return the corresponding response. 
+The file code/par_search.py implements a grid search to find the best values for number of characters to consider, and 1 to 4 turns out to be the best.
+Before, I tried to represent prompts with bigrams of the form head_lemma, thus based on dependency parsing (code/past_codes/code_1_dep.py). I constructed a vocabulary of head_lemma elements and computed frequences. This was a first guess based on our prompts being mainlyu questions, so I thought dependency mattered. Then, I tried TF-IDF with word ngrams (code/past_codes/code_1_word.py). Both models performed worse than my final choice.  
+
+# Track 2
+code/code_2.py
+As a continuous representation, I implemented FastText pre-trained model crawl-300d-2M.vec. It computes word embeddings, and then for each prompt I take the mean of word embeddings to get sentence embedding. The rest proceeds as above. 
+The reason why the BLEU score is lower than in track 1 could be due to the fact that I model to 0 each word which is not found in the vocabulary. This is especially a problem as the FastText model used is trained on english language. In our dataset, there are some prompts in spanish, portuguese, italian, and possibly other languages. 
+That is why I tried to implement more models at a time, with the logic of looking into another language model if the word was not ofund in the english one. This model (code/past_codes/code_2_manylang.py) performed worse, avg BLEU is around 0.07, and also has a running time closer to infinity than my previous model. 
+Also, my first attempt was with the classical word2vec model (code/past_codes/code_2_word2vec.py), but it performed worse than my final choice.
+
+# Track 3 
+code/code_3.py
+As a mixed representation, I used Hugging Face's Sentence Transformer model 'all-MiniLM-L6-v2'. It performs better than any other model above. 
+
+Finally, I used the code/build_results.py to retrieve responses from the codes above and build csv tables. 
