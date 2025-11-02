@@ -1,3 +1,4 @@
+# Wordle Entropy-based Guesser
 This projects consists in producing a guesser for a cousin of the game Wordle. You can play the game [here](https://www.nytimes.com/games/wordle/index.html).
 
 How to use:
